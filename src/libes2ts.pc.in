@@ -6,5 +6,5 @@ includedir=${prefix}/include
 Name: libes2ts
 Description: ES to TS conversion library
 Version: @VERSION@
-Libs: -L${libdir} -les2ts @PTHREAD_LIBS@
-Cflags: -I${includedir} @PTHREAD_CFLAGS@
+Libs: -L${libdir} -les2ts @PTHREAD_LIBS@ @LIBAV_LIBS@
+Cflags: -I${includedir} @PTHREAD_CFLAGS@ @LIBAV_CFLAGS@
