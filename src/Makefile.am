@@ -1,4 +1,4 @@
-noinst_PROGRAMS = convert stream
+noinst_PROGRAMS = stream
 lib_LTLIBRARIES = libes2ts.la
 
 libes2ts_includedir = $(includedir)/libes2ts
@@ -11,10 +11,6 @@ libes2ts_la_SOURCES = \
 	$(include_HEADERS)
 libes2ts_la_CFLAGS = @PTHREAD_CFLAGS@ @LIBAV_CFLAGS@
 libes2ts_la_LIBADD = @PTHREAD_LIBS@ @LIBAV_LIBS@
-
-convert_SOURCES = convert.c
-convert_LDADD = @LIBAV_CFLAGS@
-convert_CFLAGS = @LIBAV_LIBS@
 
 stream_SOURCES = stream.c
 stream_LDADD = libes2ts.la
