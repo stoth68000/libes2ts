@@ -79,54 +79,6 @@ static AVStream *add_output_stream(AVFormatContext * output_format_context,
 	return output_stream;
 }
 
-/* add a video output stream */
-static AVStream *add_video_stream(AVFormatContext * oc, enum CodecID codec_id)
-{
-	AVCodecContext *c;
-	AVStream *st;
-
-	st = avformat_new_stream(oc, NULL);
-	if (!st) {
-		fprintf(stderr, "Could not alloc stream\n");
-		exit(1);
-	}
-
-	c = st->codec;
-	c->codec_id = codec_id;
-	c->codec_type = AVMEDIA_TYPE_VIDEO;
-
-	/* put sample parameters */
-	c->bit_rate = 400000;
-
-	/* resolution must be a multiple of two */
-	c->width = 1280;
-	c->height = 768;
-
-	/* time base: this is the fundamental unit of time (in seconds) in terms
-	   of which frame timestamps are represented. for fixed-fps content,
-	   timebase should be 1/framerate and timestamp increments should be
-	   identically 1. */
-	c->time_base.den = 25;
-	c->time_base.num = 1;
-	c->gop_size = 30;	/* emit one intra frame every twelve frames at most */
-	c->pix_fmt = STREAM_PIX_FMT;
-	if (c->codec_id == CODEC_ID_MPEG2VIDEO) {
-		/* just for testing, we also add B frames */
-		c->max_b_frames = 2;
-	}
-	if (c->codec_id == CODEC_ID_MPEG1VIDEO) {
-		/* Needed to avoid using macroblocks in which some coeffs overflow.
-		   This does not happen with normal video, it just happens here as
-		   the motion of the chroma plane does not match the luma plane. */
-		c->mb_decision = 2;
-	}
-	// some formats want stream headers to be separate
-	if (oc->oformat->flags & AVFMT_GLOBALHEADER)
-		c->flags |= CODEC_FLAG_GLOBAL_HEADER;
-
-	return st;
-}
-
 int main(int argc, char *argv[])
 {
 	av_register_all();
