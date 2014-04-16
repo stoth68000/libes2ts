@@ -139,7 +139,6 @@ int main(int argc, char *argv[])
 	}
 
 	AVDictionary *options = NULL;
-	AVDictionaryEntry *e = NULL;
 	ret = avformat_find_stream_info(ictx, &options);
 	if (ret < 0) {
 		printf("find_stream_info\n");

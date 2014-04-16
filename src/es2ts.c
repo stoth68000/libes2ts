@@ -1,8 +1,10 @@
-#include "es2ts.h"
+#define __USE_BSD
+
+#include "config.h"
+#include <libes2ts/es2ts.h>
 
 #include <stdio.h>
 #include <string.h>
-#define __USE_BSD
 #include <unistd.h>
 #include <stdlib.h>
 
@@ -265,12 +267,12 @@ static int process_packet(struct es2ts_context_s *ctx, int *done)
 //	packet.duration = duration;
 
 	AVStream *outStream = ctx->octx->streams[0];
-	if (packet.pts != AV_NOPTS_VALUE) {
+	if (packet.pts != (int64_t)AV_NOPTS_VALUE) {
 		packet.pts =  av_rescale_q(packet.pts,  outStream->codec->time_base, outStream->time_base);
 		printf("pts\n");
 	}
 
-	if (packet.dts != AV_NOPTS_VALUE) {
+	if (packet.dts != (int64_t)AV_NOPTS_VALUE) {
 		packet.dts = av_rescale_q(packet.dts, outStream->codec->time_base, outStream->time_base);
 		printf("dts\n");
 	}
@@ -495,6 +497,7 @@ void *es2ts_process(void *p)
 	ctx->threadDone = 1;
 
 	process_teardown(ctx);
+	return NULL;
 }
 
 int es2ts_process_start(struct es2ts_context_s *ctx)
