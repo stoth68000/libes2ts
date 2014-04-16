@@ -178,10 +178,6 @@ int main(int argc, char *argv[])
 	snprintf(oc->filename, sizeof(oc->filename), "%s", filename);
 
 	AVStream *video_st = add_output_stream(oc, ictx->streams[video_codec_id]);
-	if (av_set_parameters(oc, NULL) < 0) {
-		fprintf(stderr, "Invalid output format parameters\n");
-		return 1;
-	}
 
 	av_dump_format(oc, 0, filename, 1);
 
@@ -189,7 +185,10 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Could not open '%s'\n", filename);
 		exit(1);
 	}
-	av_write_header(oc);
+	if (avformat_write_header(oc, NULL) < 0) {
+		fprintf(stderr, "Invalid output format parameters\n");
+		return 1;
+	}
 
 	int64_t c = 0;
 	int decode_done = 0;
