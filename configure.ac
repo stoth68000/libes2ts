@@ -3,7 +3,6 @@ AC_PREREQ([2.64])
 
 AC_INIT([libes2ts],
         [m4_esyscmd_s([./get-version])])
-AC_CONFIG_SRCDIR([src/convert.c])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_FILES([
         Makefile
