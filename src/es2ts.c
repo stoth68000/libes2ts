@@ -361,8 +361,22 @@ int es2ts_alloc(struct es2ts_context_s **r)
 
 int es2ts_free(struct es2ts_context_s *ctx)
 {
+	struct es2ts_buffer_s *buf;
 	if (!ctx)
 		return ES2TS_INVALID_ARG;
+
+	pthread_mutex_lock(&ctx->listlock);
+	while (xorg_list_is_empty(&ctx->listfree) == 0) {
+		buf = xorg_list_first_entry(&ctx->listfree, struct es2ts_buffer_s, list);
+		xorg_list_del(&buf->list);
+		es2ts_buffer_free(buf);
+	}
+	while (xorg_list_is_empty(&ctx->listbusy) == 0) {
+		buf = xorg_list_first_entry(&ctx->listbusy, struct es2ts_buffer_s, list);
+		xorg_list_del(&buf->list);
+		es2ts_buffer_free(buf);
+	}
+	pthread_mutex_unlock(&ctx->listlock);
 
 	memset(ctx, 0, sizeof(*ctx));
 
