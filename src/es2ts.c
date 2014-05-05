@@ -1,5 +1,7 @@
 #define __USE_BSD
 
+#define KL_DEBUG
+
 #include "config.h"
 #include <libes2ts/es2ts.h>
 
@@ -33,8 +35,8 @@ static int es2ts_data_dequeue(struct es2ts_context_s *ctx, unsigned char *data, 
 static int ReadFunc(void *opaque, uint8_t *buf, int buf_size)
 {
 	struct es2ts_context_s *ctx = opaque;
-#if 0
-	printf("%s(%p, %p, %d)\n", __func__, ctx, buf, buf_size);
+#ifdef KL_DEBUG
+	fprintf(stderr, "%s(%p, %p, %d)\n", __func__, ctx, buf, buf_size);
 #endif
 
 	while (1) {
@@ -54,8 +56,8 @@ static int ReadFunc(void *opaque, uint8_t *buf, int buf_size)
 /* Write a buffer of payload (TS packets) to a downstream buffer */
 static int WriteFunc(void *opaque, uint8_t *buf, int buf_size)
 {
-#if 0
-	printf("%s(%p, %p, %d)\n", __func__, opaque, buf, buf_size);
+#ifdef KL_DEBUG
+	fprintf(stderr, "%s(%p, %p, %d)\n", __func__, opaque, buf, buf_size);
 #endif
 	struct es2ts_context_s *ctx = opaque;
 	return ctx->cb(ctx, buf, buf_size);
@@ -94,6 +96,8 @@ static AVStream *add_output_stream(AVFormatContext *ofc, AVStream *input_stream)
 	} else {
 		occ->time_base = input_stream->time_base;
 	}
+
+	/* TODO: Some hardcoded framerates here, review and fix. */
 	occ->time_base.den = 30;
 	occ->time_base.num = 1;
 	occ->ticks_per_frame = 1;
@@ -454,6 +458,10 @@ int es2ts_data_enqueue(struct es2ts_context_s *ctx, unsigned char *data, int len
 	if ((!ctx) || (!data) || (len <= 0))
 		return ES2TS_INVALID_ARG;
 
+#ifdef KL_DEBUG
+	fprintf(stderr, "%s(%p, %p, %d)\n", __func__, ctx, data, len);
+#endif
+
 	int inputrem = len;
 	int idx = 0;
 	pthread_mutex_lock(&ctx->listlock);
@@ -493,6 +501,9 @@ int es2ts_data_enqueue(struct es2ts_context_s *ctx, unsigned char *data, int len
 void *es2ts_process(void *p)
 {
 	struct es2ts_context_s *ctx = p;
+#ifdef KL_DEBUG
+	fprintf(stderr, "%s(%p) Thread starts\n", __func__, ctx);
+#endif
 
 	process_setup(ctx);
 
@@ -511,6 +522,10 @@ void *es2ts_process(void *p)
 	ctx->threadDone = 1;
 
 	process_teardown(ctx);
+
+#ifdef KL_DEBUG
+	fprintf(stderr, "%s(%p) Thread complete\n", __func__, ctx);
+#endif
 	return NULL;
 }
 
@@ -519,9 +534,16 @@ int es2ts_process_start(struct es2ts_context_s *ctx)
 	if (!ctx)
 		return ES2TS_INVALID_ARG;
 
+#ifdef KL_DEBUG
+	fprintf(stderr, "%s(%p) Creating Thread\n", __func__, ctx);
+#endif
+
 	if (pthread_create(&ctx->thread, NULL, &es2ts_process, ctx) != 0)
 		return ES2TS_ERROR;
 
+#ifdef KL_DEBUG
+	fprintf(stderr, "%s(%p) Thread Creation success\n", __func__, ctx);
+#endif
 	return ES2TS_OK;
 }
 
@@ -529,6 +551,10 @@ int es2ts_process_end(struct es2ts_context_s *ctx)
 {
 	if (!ctx)
 		return ES2TS_INVALID_ARG;
+
+#ifdef KL_DEBUG
+	fprintf(stderr, "%s(%p) Thread termination requested\n", __func__, ctx);
+#endif
 
 	ctx->threadTerminate = 1;
 	while (!ctx->threadDone)
