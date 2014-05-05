@@ -49,6 +49,9 @@ static int ReadFunc(void *opaque, uint8_t *buf, int buf_size)
 
 		break;
 	}
+#ifdef KL_DEBUG
+	fprintf(stderr, "%s(%p) complete %d bytes\n", __func__, ctx, buf_size);
+#endif
 
 	return buf_size;
 }
