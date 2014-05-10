@@ -40,6 +40,9 @@ static int ReadFunc(void *opaque, uint8_t *buf, int buf_size)
 #endif
 
 	while (1) {
+		if (ctx->threadTerminate)
+			break;
+
 		int ret = es2ts_data_dequeue(ctx, buf, buf_size);
 		if (ES2TS_FAILED(ret)) {
 			//return AVERROR_EOF;
@@ -63,6 +66,8 @@ static int WriteFunc(void *opaque, uint8_t *buf, int buf_size)
 	fprintf(stderr, "%s(%p, %p, %d)\n", __func__, opaque, buf, buf_size);
 #endif
 	struct es2ts_context_s *ctx = opaque;
+	if (ctx->threadTerminate)
+		return ES2TS_OK;
 	return ctx->cb(ctx, buf, buf_size);
 }
 
