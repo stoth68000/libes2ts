@@ -573,6 +573,8 @@ int es2ts_process_end(struct es2ts_context_s *ctx)
 		usleep(100 * 1000);
 	ctx->threadRunning = 0;
 	ctx->threadTerminate = 0;
-
+#ifdef KL_DEBUG
+	fprintf(stderr, "%s(%p) Thread termination complete\n", __func__, ctx);
+#endif
 	return ES2TS_OK;
 }
