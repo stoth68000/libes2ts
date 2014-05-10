@@ -1,6 +1,6 @@
 #define __USE_BSD
 
-#define KL_DEBUG
+//#define KL_DEBUG
 
 #include "config.h"
 #include <libes2ts/es2ts.h>
@@ -36,7 +36,7 @@ static int ReadFunc(void *opaque, uint8_t *buf, int buf_size)
 {
 	struct es2ts_context_s *ctx = opaque;
 #ifdef KL_DEBUG
-	fprintf(stderr, "%s(%p, %p, %d)\n", __func__, ctx, buf, buf_size);
+	fprintf(stderr, "%s(%p, %p, %d) %s\n", __func__, ctx, buf, buf_size, __TIME__);
 #endif
 
 	while (1) {
@@ -443,6 +443,9 @@ static int es2ts_data_dequeue(struct es2ts_context_s *ctx, unsigned char *data, 
 			xorg_list_del(&buf->list);
 			es2ts_buffer_recycle(buf);
 			xorg_list_append(&buf->list, &ctx->listfree);
+#ifdef KL_DEBUG
+			fprintf(stderr, "%s(%p, %p, %d) append to free\n", __func__, ctx, data, len);
+#endif
 		}
 	}
 	pthread_mutex_unlock(&ctx->listlock);
@@ -450,6 +453,9 @@ static int es2ts_data_dequeue(struct es2ts_context_s *ctx, unsigned char *data, 
 	if (outputrem == 0)
 		ret = ES2TS_OK;
 
+#ifdef KL_DEBUG
+	fprintf(stderr, "%s() returns %d\n", __func__, ret);
+#endif
 	return ret;
 }
 
@@ -491,6 +497,9 @@ int es2ts_data_enqueue(struct es2ts_context_s *ctx, unsigned char *data, int len
 		if (buf->usedlen == buf->maxlen) {
 			xorg_list_del(&buf->list);
 			xorg_list_append(&buf->list, &ctx->listbusy);
+#ifdef KL_DEBUG
+			fprintf(stderr, "%s(%p, %p, %d) append to busy\n", __func__, ctx, data, len);
+#endif
 		}
 	}
 	pthread_mutex_unlock(&ctx->listlock);
