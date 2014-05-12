@@ -46,7 +46,7 @@ static int ReadFunc(void *opaque, uint8_t *buf, int buf_size)
 		int ret = es2ts_data_dequeue(ctx, buf, buf_size);
 		if (ES2TS_FAILED(ret)) {
 			//return AVERROR_EOF;
-			usleep(100 * 1000);
+			usleep(10 * 1000);
 			continue;
 		}
 
