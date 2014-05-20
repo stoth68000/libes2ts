@@ -34,6 +34,15 @@ static void es2ts_buffer_free(struct es2ts_buffer_s *buf);
 static void es2ts_buffer_recycle(struct es2ts_buffer_s *buf);
 static int es2ts_data_dequeue(struct es2ts_context_s *ctx, unsigned char *data, int len);
 
+static const char *now(void)
+{
+	struct timeval tv;
+	static __thread char result[128];
+	gettimeofday(&tv, NULL);
+	snprintf(result, sizeof(result), "%010ld.%05ld", tv.tv_sec, tv.tv_usec);
+	return result;
+}
+
 /* Read a buffer of payload (H264 nals) from an upstream source.
  * This is a blocking read routine. If we don't block libavformat eventually
  * segfaults after huge memory allocations.
@@ -42,7 +51,7 @@ static int ReadFunc(void *opaque, uint8_t *buf, int buf_size)
 {
 	struct es2ts_context_s *ctx = opaque;
 #ifdef KL_DEBUG
-	fprintf(stderr, "%s(%p, %p, %d) %s\n", __func__, ctx, buf, buf_size, __TIME__);
+	fprintf(stderr, "%s: %s(%p, %p, %d)\n", now(), __func__, ctx, buf, buf_size);
 #endif
 
 	while (1) {
@@ -59,7 +68,7 @@ static int ReadFunc(void *opaque, uint8_t *buf, int buf_size)
 		break;
 	}
 #ifdef KL_DEBUG
-	fprintf(stderr, "%s(%p) complete %d bytes\n", __func__, ctx, buf_size);
+	fprintf(stderr, "%s: %s(%p) complete %d bytes\n", now(), __func__, ctx, buf_size);
 #endif
 
 	return buf_size;
@@ -69,7 +78,7 @@ static int ReadFunc(void *opaque, uint8_t *buf, int buf_size)
 static int WriteFunc(void *opaque, uint8_t *buf, int buf_size)
 {
 #ifdef KL_DEBUG
-	fprintf(stderr, "%s(%p, %p, %d)\n", __func__, opaque, buf, buf_size);
+	fprintf(stderr, "%s: %s(%p, %p, %d)\n", now(), __func__, opaque, buf, buf_size);
 #endif
 	struct es2ts_context_s *ctx = opaque;
 	if (ctx->threadTerminate)
@@ -451,12 +460,12 @@ static int es2ts_data_dequeue(struct es2ts_context_s *ctx, unsigned char *data, 
 		outputrem -= cplen;
 
 		if (buf->readptr == buf->maxlen) {
+#ifdef KL_DEBUG
+			fprintf(stderr, "%s: %s(%p, %p, %d) append to free\n", now(), __func__, ctx, data, buf->usedlen);
+#endif
 			xorg_list_del(&buf->list);
 			es2ts_buffer_recycle(buf);
 			xorg_list_append(&buf->list, &ctx->listfree);
-#ifdef KL_DEBUG
-			fprintf(stderr, "%s(%p, %p, %d) append to free\n", __func__, ctx, data, len);
-#endif
 		}
 	}
 	pthread_mutex_unlock(&ctx->listlock);
@@ -465,7 +474,7 @@ static int es2ts_data_dequeue(struct es2ts_context_s *ctx, unsigned char *data, 
 		ret = ES2TS_OK;
 
 #ifdef KL_DEBUG
-	fprintf(stderr, "%s() returns %d\n", __func__, ret);
+	fprintf(stderr, "%s: %s() returns %d\n", now(), __func__, ret);
 #endif
 	return ret;
 }
@@ -479,7 +488,7 @@ int es2ts_data_enqueue(struct es2ts_context_s *ctx, unsigned char *data, int len
 		return ES2TS_INVALID_ARG;
 
 #ifdef KL_DEBUG
-	fprintf(stderr, "%s(%p, %p, %d)\n", __func__, ctx, data, len);
+	fprintf(stderr, "%s: %s(%p, %p, %d)\n", now(), __func__, ctx, data, len);
 #endif
 
 	int inputrem = len;
@@ -509,7 +518,7 @@ int es2ts_data_enqueue(struct es2ts_context_s *ctx, unsigned char *data, int len
 			xorg_list_del(&buf->list);
 			xorg_list_append(&buf->list, &ctx->listbusy);
 #ifdef KL_DEBUG
-			fprintf(stderr, "%s(%p, %p, %d) append to busy\n", __func__, ctx, data, len);
+			fprintf(stderr, "%s: %s(%p, %p, %d) append to busy\n", now(), __func__, ctx, data, len);
 #endif
 		}
 	}
@@ -525,7 +534,7 @@ void *es2ts_process(void *p)
 {
 	struct es2ts_context_s *ctx = p;
 #ifdef KL_DEBUG
-	fprintf(stderr, "%s(%p) Thread starts\n", __func__, ctx);
+	fprintf(stderr, "%s: %s(%p) Thread starts\n", now(), __func__, ctx);
 #endif
 
 	process_setup(ctx);
@@ -547,7 +556,7 @@ void *es2ts_process(void *p)
 	process_teardown(ctx);
 
 #ifdef KL_DEBUG
-	fprintf(stderr, "%s(%p) Thread complete\n", __func__, ctx);
+	fprintf(stderr, "%s: %s(%p) Thread complete\n", now(), __func__, ctx);
 #endif
 	return NULL;
 }
@@ -558,14 +567,14 @@ int es2ts_process_start(struct es2ts_context_s *ctx)
 		return ES2TS_INVALID_ARG;
 
 #ifdef KL_DEBUG
-	fprintf(stderr, "%s(%p) Creating Thread\n", __func__, ctx);
+	fprintf(stderr, "%s: %s(%p) Creating Thread\n", now(), __func__, ctx);
 #endif
 
 	if (pthread_create(&ctx->thread, NULL, &es2ts_process, ctx) != 0)
 		return ES2TS_ERROR;
 
 #ifdef KL_DEBUG
-	fprintf(stderr, "%s(%p) Thread Creation success\n", __func__, ctx);
+	fprintf(stderr, "%s: %s(%p) Thread Creation success\n", now(), __func__, ctx);
 #endif
 	return ES2TS_OK;
 }
@@ -576,7 +585,7 @@ int es2ts_process_end(struct es2ts_context_s *ctx)
 		return ES2TS_INVALID_ARG;
 
 #ifdef KL_DEBUG
-	fprintf(stderr, "%s(%p) Thread termination requested\n", __func__, ctx);
+	fprintf(stderr, "%s: %s(%p) Thread termination requested\n", now(), __func__, ctx);
 #endif
 
 	ctx->threadTerminate = 1;
@@ -585,7 +594,7 @@ int es2ts_process_end(struct es2ts_context_s *ctx)
 	ctx->threadRunning = 0;
 	ctx->threadTerminate = 0;
 #ifdef KL_DEBUG
-	fprintf(stderr, "%s(%p) Thread termination complete\n", __func__, ctx);
+	fprintf(stderr, "%s: %s(%p) Thread termination complete\n", now(), __func__, ctx);
 #endif
 	return ES2TS_OK;
 }
