@@ -10,6 +10,12 @@
 #include <unistd.h>
 #include <stdlib.h>
 
+/* Compatibility with older versions of ffmpeg */
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(54,59,100)
+# define AV_CODEC_ID_MP3 CODEC_ID_MP3
+# define AV_CODEC_ID_AC3 CODEC_ID_AC3
+#endif
+
 #define MAX_BUFFERS	256
 #define MAX_BUFFER_SIZE 32768
 
@@ -130,8 +136,8 @@ static AVStream *add_output_stream(AVFormatContext *ofc, AVStream *input_stream)
 		occ->channels = icc->channels;
 		occ->frame_size = icc->frame_size;
 		if ((icc->block_align == 1 &&
-			icc->codec_id == CODEC_ID_MP3) ||
-			icc->codec_id == CODEC_ID_AC3)
+			icc->codec_id == AV_CODEC_ID_MP3) ||
+			icc->codec_id == AV_CODEC_ID_AC3)
 		{
 			occ->block_align = 0;
 		} else {
