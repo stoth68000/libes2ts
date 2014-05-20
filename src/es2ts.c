@@ -441,12 +441,12 @@ static int es2ts_data_dequeue(struct es2ts_context_s *ctx, unsigned char *data, 
 	pthread_mutex_lock(&ctx->listlock);
 	while (outputrem > 0) {
 		if (xorg_list_is_empty(&ctx->listbusy)) {
-			ret = ES2TS_NO_RESOURCE;
+			ret = (outputrem == len)?ES2TS_NO_RESOURCE:ES2TS_OK;
 			break;
 		}
 
 		buf = xorg_list_first_entry(&ctx->listbusy, struct es2ts_buffer_s, list);
-		int bufrem = buf->maxlen - buf->readptr;
+		int bufrem = buf->usedlen - buf->readptr;
 
 		int cplen;
 		if (outputrem <= bufrem)
@@ -459,7 +459,7 @@ static int es2ts_data_dequeue(struct es2ts_context_s *ctx, unsigned char *data, 
 		idx += cplen;
 		outputrem -= cplen;
 
-		if (buf->readptr == buf->maxlen) {
+		if (buf->readptr == buf->usedlen) {
 #ifdef KL_DEBUG
 			fprintf(stderr, "%s: %s(%p, %p, %d) append to free\n", now(), __func__, ctx, data, buf->usedlen);
 #endif
@@ -494,7 +494,7 @@ int es2ts_data_enqueue(struct es2ts_context_s *ctx, unsigned char *data, int len
 	int inputrem = len;
 	int idx = 0;
 	pthread_mutex_lock(&ctx->listlock);
-	while (inputrem > 0) {
+	while (1) {
 		if (xorg_list_is_empty(&ctx->listfree)) {
 			ret = ES2TS_ERROR;
 			break;
@@ -514,13 +514,14 @@ int es2ts_data_enqueue(struct es2ts_context_s *ctx, unsigned char *data, int len
 		idx += cplen;
 		inputrem -= cplen;
 
-		if (buf->usedlen == buf->maxlen) {
+		if (buf->usedlen == buf->maxlen || inputrem == 0) {
 			xorg_list_del(&buf->list);
 			xorg_list_append(&buf->list, &ctx->listbusy);
 #ifdef KL_DEBUG
 			fprintf(stderr, "%s: %s(%p, %p, %d) append to busy\n", now(), __func__, ctx, data, len);
 #endif
 		}
+		if (inputrem == 0) break;
 	}
 	pthread_mutex_unlock(&ctx->listlock);
 
