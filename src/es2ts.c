@@ -172,7 +172,7 @@ static AVStream *add_output_stream(AVFormatContext *ofc, AVStream *input_stream)
 
 static int process_setup(struct es2ts_context_s *ctx)
 {
-        int iReadBufSize = 32 * 1024;
+        int iReadBufSize = 7 * 188;
         int iWriteBufSize = 7 * 188;
 	int ret;
 
