@@ -34,6 +34,7 @@ static void es2ts_buffer_free(struct es2ts_buffer_s *buf);
 static void es2ts_buffer_recycle(struct es2ts_buffer_s *buf);
 static int es2ts_data_dequeue(struct es2ts_context_s *ctx, unsigned char *data, int len);
 
+#ifdef KL_DEBUG
 static const char *now(void)
 {
 	struct timeval tv;
@@ -42,6 +43,7 @@ static const char *now(void)
 	snprintf(result, sizeof(result), "%010ld.%05ld", tv.tv_sec, tv.tv_usec);
 	return result;
 }
+#endif
 
 /* Read a buffer of payload (H264 nals) from an upstream source.
  * This is a blocking read routine. If we don't block libavformat eventually
