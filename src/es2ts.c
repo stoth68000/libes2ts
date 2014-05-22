@@ -9,6 +9,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <sys/time.h>
 
 /* Compatibility with older versions of ffmpeg */
 #if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(54,59,100)
