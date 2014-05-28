@@ -19,7 +19,8 @@ int downstream_callback(struct es2ts_context_s *ctx, unsigned char *buf, int len
 		}
 	}
 
-	(void)fwrite(buf, 1, len, fh);
+	if (fwrite(buf, 1, len, fh) < 0)
+		return ES2TS_ERROR;
 
 	return ES2TS_OK;
 }
