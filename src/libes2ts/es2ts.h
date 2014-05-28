@@ -29,6 +29,8 @@
  *    downstream application has registered.
  */
 
+extern int es2ts_debug;		/* If set to 1, additional debug information */
+
 struct es2ts_context_s;
 
 typedef int (*es2ts_callback)(struct es2ts_context_s *ctx, unsigned char *buf, int len);
