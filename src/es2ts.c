@@ -587,3 +587,10 @@ int es2ts_process_end(struct es2ts_context_s *ctx)
 		fprintf(stderr, "%s: %s(%p) Thread termination complete\n", now(), __func__, ctx);
 	return ES2TS_OK;
 }
+
+const char *
+es2ts_get_version(void)
+{
+    static const char *version_str = PACKAGE_VERSION;
+    return version_str;
+}

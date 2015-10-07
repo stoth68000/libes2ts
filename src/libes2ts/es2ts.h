@@ -74,4 +74,7 @@ int es2ts_data_enqueue(struct es2ts_context_s *ctx, unsigned char *data, int len
 int es2ts_process_start(struct es2ts_context_s *ctx);
 int es2ts_process_end(struct es2ts_context_s *ctx);
 
+/* Get version information of libes2ts in runtime */
+const char *es2ts_get_version(void);
+
 #endif
