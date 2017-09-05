@@ -9,7 +9,7 @@ libes2ts_include_HEADERS = \
 libes2ts_la_SOURCES = \
 	es2ts.c \
 	$(include_HEADERS)
-libes2ts_la_CFLAGS = @PTHREAD_CFLAGS@ @LIBAV_CFLAGS@
+libes2ts_la_CFLAGS = @PTHREAD_CFLAGS@ @LIBAV_CFLAGS@ -fPIC
 libes2ts_la_LIBADD = @PTHREAD_LIBS@ @LIBAV_LIBS@
 
 stream_SOURCES = stream.c
